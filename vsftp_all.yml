@@ -1,0 +1,56 @@
+---
+- name: Install and configure vsftpd on AlmaLinux and Ubuntu
+  hosts: all
+  become: yes
+  vars:
+    vsftpd_package_rpm: vsftpd
+    vsftpd_package_debian: vsftpd
+
+  tasks:
+    - name: Detect OS family
+      ansible.builtin.debug:
+        msg: "Installing vsftpd on {{ ansible_facts['os_family'] }} system"
+
+    - name: Install vsftpd on RHEL/AlmaLinux (RPM-based)
+      ansible.builtin.dnf:
+        name: "{{ vsftpd_package_rpm }}"
+        state: present
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Install vsftpd on Debian/Ubuntu (DEB-based)
+      ansible.builtin.apt:
+        name: "{{ vsftpd_package_debian }}"
+        state: present
+        update_cache: yes
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Enable and start vsftpd service
+      ansible.builtin.service:
+        name: vsftpd
+        state: started
+        enabled: yes
+
+    - name: Ensure FTP port (21) is allowed in firewall (for RHEL-based)
+      ansible.builtin.firewalld:
+        service: ftp
+        state: enabled
+        permanent: yes
+        immediate: yes
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Open FTP port in UFW (for Ubuntu)
+      ansible.builtin.ufw:
+        rule: allow
+        port: "21"
+        proto: tcp
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Confirm vsftpd is running
+      ansible.builtin.shell: systemctl status vsftpd
+      register: vsftpd_status
+      ignore_errors: yes
+
+    - name: Show vsftpd service status
+      ansible.builtin.debug:
+        var: vsftpd_status.stdout
+
