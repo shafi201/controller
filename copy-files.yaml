@@ -1,0 +1,14 @@
+- name: copy files between hosts
+  hosts: ansible1
+  tasks:
+  - name: copy file from ansible2 to ansible1
+    copy:
+      src: /etc/hosts
+      dest: /tmp/hosts
+    delegate_to: ansible2
+  - name: check file
+    stat:
+      path: /tmp/hosts
+    register: stafile
+  - debug:
+      var: stafile
