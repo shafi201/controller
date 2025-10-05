@@ -24,33 +24,4 @@
         update_cache: yes
       when: ansible_facts['os_family'] == "Debian"
 
-    - name: Enable and start vsftpd service
-      ansible.builtin.service:
-        name: vsftpd
-        state: started
-        enabled: yes
-
-    - name: Ensure FTP port (21) is allowed in firewall (for RHEL-based)
-      ansible.builtin.firewalld:
-        service: ftp
-        state: enabled
-        permanent: yes
-        immediate: yes
-      when: ansible_facts['os_family'] == "RedHat"
-
-    - name: Open FTP port in UFW (for Ubuntu)
-      ansible.builtin.ufw:
-        rule: allow
-        port: "21"
-        proto: tcp
-      when: ansible_facts['os_family'] == "Debian"
-
-    - name: Confirm vsftpd is running
-      ansible.builtin.shell: systemctl status vsftpd
-      register: vsftpd_status
-      ignore_errors: yes
-
-    - name: Show vsftpd service status
-      ansible.builtin.debug:
-        var: vsftpd_status.stdout
-
+   
